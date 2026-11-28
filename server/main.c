@@ -39,13 +39,15 @@ int main(void) {
 
     ENetEvent event;
     while (is_running) {
-        // Обрабатываем сетевые события с минимальной задержкой
         while (enet_host_service(server, &event, 1) > 0) {
             switch (event.type) {
                 case ENET_EVENT_TYPE_CONNECT: {
                     uint8_t id = (uint8_t)event.peer->incomingPeerID;
-                    printf("[SERVER] Client connected from %x:%u -> Assigned ID: %u\n",
-                           event.peer->address.host, event.peer->address.port, id);
+                    char ip_str[46] = "unknown";
+                    enet_address_get_host_ip(&event.peer->address, ip_str, sizeof(ip_str));
+
+                    printf("[SERVER] Client connected from %s:%u -> Assigned ID: %u\n",
+                           ip_str, event.peer->address.port, id);
 
                     PacketWelcome pkt = {
                         .type = PACKET_WELCOME,
@@ -77,12 +79,10 @@ int main(void) {
             }
         }
 
-        // Фиксированный шаг симуляции
         uint32_t now = enet_time_get();
         if (now - last_tick_time >= tick_ms) {
             last_tick_time += tick_ms;
             current_tick++;
-            // Здесь в будущем будет физика и рассылка снапшотов
         }
     }
 

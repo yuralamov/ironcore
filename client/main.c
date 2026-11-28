@@ -48,23 +48,10 @@ int main(int argc, char **argv) {
     while (is_running) {
         while (enet_host_service(client, &event, 10) > 0) {
             switch (event.type) {
-                case ENET_EVENT_TYPE_CONNECT: {
-                    uint8_t id = (uint8_t)event.peer->incomingPeerID;
-                    char ip_str[64] = "unknown";
-                    enet_address_get_host_ip(&event.peer->address, ip_str, sizeof(ip_str));
-
-                    printf("[SERVER] Client connected from %s:%u -> Assigned ID: %u\n",
-                           ip_str, event.peer->address.port, id);
-
-                    PacketWelcome pkt = {
-                        .type = PACKET_WELCOME,
-                        .player_id = id,
-                        .server_tick = current_tick
-                    };
-                    ENetPacket *packet = enet_packet_create(&pkt, sizeof(pkt), ENET_PACKET_FLAG_RELIABLE);
-                    enet_peer_send(event.peer, 0, packet);
+                case ENET_EVENT_TYPE_CONNECT:
+                    printf("[CLIENT] Connected to server!\n");
+                    connected = true;
                     break;
-                }
 
                 case ENET_EVENT_TYPE_RECEIVE:
                     if (event.packet->dataLength >= 1) {
@@ -89,7 +76,6 @@ int main(int argc, char **argv) {
             }
         }
 
-        // Раз в секунду отправляем тестовый пакет
         uint32_t now = enet_time_get();
         if (connected && (now - last_ping >= 1000)) {
             last_ping = now;
